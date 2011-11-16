@@ -28,7 +28,21 @@ Add the following dependency to your pom.xml in order to use Jedis to connect to
 
 ### Using Redis with Spring
 
-Spring Configuration:
+When using Redis with Spring you can create a bean that will hold your Redis configuration and then use Spring to initialize that bean:
+
+Redis Configuration Bean:
+
+    public class RedisConfig {
+        String host;
+        int port;
+        String password;
+
+        //getters and setters ommitted
+    }
+
+This bean can be initialized with either Java or XML based spring configuration:
+
+Java Configuration:
 
     :::java
     @Configuration
@@ -48,9 +62,18 @@ Spring Configuration:
         }
     }
 
+or XML Configuration:
+
+    <bean class="com.heroku.devcenter.spring.RedisConfig">
+      <property name="host" value="#{systemEnvironment['REDISTOGO_URL'].replaceAll('^redis://([^:]*):([^@]*)@([^:]*):([^/]*)(/)?','$3') }"/>
+      <property name="port" value="#{systemEnvironment['REDISTOGO_URL'].replaceAll('^redis://([^:]*):([^@]*)@([^:]*):([^/]*)(/)?','$4') }"/>
+      <property name="password" value="#{systemEnvironment['REDISTOGO_URL'].replaceAll('^redis://([^:]*):([^@]*)@([^:]*):([^/]*)(/)?','$2') }"/>
+    </bean>
+
 Pool Creation:
 
     :::java
+    //Use GenericXmlApplicationContext for xml based config
     ApplicationContext ctx = new AnnotationConfigApplicationContext(SpringConfig.class);
     RedisConfig config = ctx.getBean(RedisConfig.class);
     JedisPool pool = new JedisPool(new Config(), config.getHost(), config.getPort(), Protocol.DEFAULT_TIMEOUT, config.getPassword());

@@ -3,6 +3,7 @@ package com.heroku.devcenter.spring;
 import org.apache.commons.pool.impl.GenericObjectPool.Config;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.support.GenericXmlApplicationContext;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -13,6 +14,7 @@ public class Main {
     
 	public static void main(String[] args) {
 		ApplicationContext ctx = new AnnotationConfigApplicationContext(SpringConfig.class);
+		//ApplicationContext ctx = new GenericXmlApplicationContext("applicationContext.xml");
 		RedisConfig config = ctx.getBean(RedisConfig.class);
         //Create the connection pool from the values in the URL
         //This pool can be stored in a singleton and reused
