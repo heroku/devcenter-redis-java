@@ -33,9 +33,9 @@ When using Redis with Spring you can create a bean that will hold your Redis con
 Redis Configuration Bean:
 
     public class RedisConfig {
-        String host;
-        int port;
-        String password;
+        private String host;
+        private int port;
+        private String password;
 
         //getters and setters ommitted
     }
@@ -78,3 +78,5 @@ Pool Creation:
     RedisConfig config = ctx.getBean(RedisConfig.class);
     JedisPool pool = new JedisPool(new Config(), config.getHost(), config.getPort(), Protocol.DEFAULT_TIMEOUT, config.getPassword());
     Jedis jedis = pool.getResource();
+
+You can also download the [sample code](http://github.com/heroku/devcenter-redis-java.git)

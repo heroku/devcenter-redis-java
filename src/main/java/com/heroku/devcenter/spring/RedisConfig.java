@@ -2,9 +2,9 @@ package com.heroku.devcenter.spring;
 
 public class RedisConfig {
 
-	String host;
-	int port;
-	String password;
+	private String host;
+	private int port;
+	private String password;
 	
 	public String getHost() {
 		return host;
