@@ -79,4 +79,4 @@ Pool Creation:
     JedisPool pool = new JedisPool(new Config(), config.getHost(), config.getPort(), Protocol.DEFAULT_TIMEOUT, config.getPassword());
     Jedis jedis = pool.getResource();
 
-You can also download the [sample code](http://github.com/heroku/devcenter-redis-java.git)
+You can also download the [sample code](http://github.com/heroku/devcenter-redis-java)
