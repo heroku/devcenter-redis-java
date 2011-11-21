@@ -1,26 +1,32 @@
 package com.heroku.devcenter.spring;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.Protocol;
 
 @Configuration
 public class SpringConfig {
 
 	@Bean
-	public RedisConfig getRedisConfig() {
-		Pattern pattern = Pattern.compile("^redis://([^:]*):([^@]*)@([^:]*):([^/]*)(/)?");
-		//Parse the configuration URL
-        Matcher matcher = pattern.matcher(System.getenv("REDISTOGO_URL"));
-        matcher.matches();
-        
-		RedisConfig config = new RedisConfig();
-		config.setHost(matcher.group(3));
-		config.setPort(Integer.parseInt(matcher.group(4)));
-		config.setPassword(matcher.group(2));
-		return config;
-	}
+    public JedisPool getJedisPool() {
+            try {
+                    URI redisURI = new URI(System.getenv("REDISTOGO_URL"));
+                    System.out.println("Setting up new RedisPool for connection "+redisURI);
+                    return new JedisPool(new JedisPoolConfig(),
+                                    redisURI.getHost(),
+                                    redisURI.getPort(),
+                                    Protocol.DEFAULT_TIMEOUT,
+                                    redisURI.getUserInfo().split(":",2)[1]);
+            } catch (URISyntaxException e) {
+                    throw new RuntimeException("Redis couldn't be configured from URL in REDISTOGO_URL env var: "+
+                    							System.getenv("REDISTOGO_URL"));
+            }
+    }
 	
 }

@@ -1,10 +1,10 @@
 ## Using Redis from Java
 
-Jedis is a popular Java Redis client. In order to use Jedis in your project you have to declare the dependency in your build and initialize the connection from the environment variable that Heroku provides to your application.
+There are several Java libraries available for connecting to Redis, including [Jedis](https://github.com/xetorthio/jedis) and [JRedis](http://code.google.com/p/jredis/). This guide will show how to use Jedis from both a generic Java application and a Spring configured application.
 
-### Add Jedis to Your Pom.xml
+### Add Jedis to Dependencies
 
-Add the following dependency to your pom.xml in order to use Jedis to connect to Redis:
+Include the Jedis library in your application by adding the following dependency to `pom.xml`:
 
     <dependency>
         <groupId>redis.clients</groupId>
@@ -14,69 +14,150 @@ Add the following dependency to your pom.xml in order to use Jedis to connect to
 
 ### Use Redis in Your Application
 
+The connection information for the Redis Service provisioned by Redis To Go is stored as a URL in the `REDISTOGO_URL` config var. You can create a Jedis connection pool from this URL string with the following code snippet:
+
     :::java
-    Pattern urlPattern = Pattern.compile("^redis://([^:]*):([^@]*)@([^:]*):([^/]*)(/)?");
-    //Parse the configuration URL
-    Matcher matcher = urlPattern.matcher(System.getenv("REDISTOGO_URL"));
-    matcher.matches();
-	
-    //Create the connection pool from the values in the URL
-    //This pool can be stored in a singleton and reused
-    JedisPool pool = new JedisPool(new Config(), matcher.group(3), Integer.parseInt(matcher.group(4)), Protocol.DEFAULT_TIMEOUT, matcher.group(2));
+    try {
+    	URI redisURI = new URI(System.getenv("REDISTOGO_URL"));
+    	JedisPool pool = new JedisPool(new JedisPoolConfig(),
+    			redisURI.getHost(),
+    			redisURI.getPort(),
+    			Protocol.DEFAULT_TIMEOUT,
+    			redisURI.getUserInfo().split(":",2)[1]);
+    } catch (URISyntaxException e) {
+        // URI couldn't be parsed. Handle exception
+    }
+
+Now you can use this pool to perform Redis operations. For example:
+
+    :::java
     Jedis jedis = pool.getResource();
-    jedis.set("testKey", "test");
+    try {
+      /// ... do stuff here ... for example
+      jedis.set("foo", "bar");
+      String foobar = jedis.get("foo");
+      jedis.zadd("sose", 0, "car"); jedis.zadd("sose", 0, "bike"); 
+      Set<String> sose = jedis.zrange("sose", 0, -1);
+    } finally {
+      /// ... it's important to return the Jedis instance to the pool once you've finished using it
+      pool.returnResource(jedis);
+    }
+
+(example taken directly from Jedis docs).
 
 ### Using Redis with Spring
 
-When using Redis with Spring you can create a bean that will hold your Redis configuration and then use Spring to initialize that bean:
-
-Redis Configuration Bean:
-
-    public class RedisConfig {
-        private String host;
-        private int port;
-        private String password;
-
-        //getters and setters ommitted
-    }
-
-This bean can be initialized with either Java or XML based spring configuration:
-
-Java Configuration:
+Using the following Java Configuration class to set up a `JedisPool` instance as a singleton Spring bean:
 
     :::java
     @Configuration
     public class SpringConfig {
-        @Bean
-        public RedisConfig getRedisConfig() {
-            Pattern pattern = Pattern.compile("^redis://([^:]*):([^@]*)@([^:]*):([^/]*)(/)?");
-            //Parse the configuration URL
-            Matcher matcher = pattern.matcher(System.getenv("REDISTOGO_URL"));
-            matcher.matches();
-        
-            RedisConfig config = new RedisConfig();
-            config.setHost(matcher.group(3));
-            config.setPort(Integer.parseInt(matcher.group(4)));
-            config.setPassword(matcher.group(2));
-            return config;
-        }
+
+    	@Bean
+    	public JedisPool getJedisPool() {
+    		try {
+    			URI redisURI = new URI(System.getenv("REDISTOGO_URL"));
+    			return new JedisPool(new JedisPoolConfig(),
+    					redisURI.getHost(),
+    					redisURI.getPort(),
+    					Protocol.DEFAULT_TIMEOUT,
+    					redisURI.getUserInfo().split(":",2)[1]);
+    		} catch (URISyntaxException e) {
+    			throw new RuntimeException("Redis couldn't be configured from URL in REDISTOGO_URL env var:"+ 
+    			                            System.getenv("REDISTOGO_URL"));
+    		}
+    	}
+	
     }
 
-or XML Configuration:
+or the following XML configuration file:
 
-    <bean class="com.heroku.devcenter.spring.RedisConfig">
-      <property name="host" value="#{systemEnvironment['REDISTOGO_URL'].replaceAll('^redis://([^:]*):([^@]*)@([^:]*):([^/]*)(/)?','$3') }"/>
-      <property name="port" value="#{systemEnvironment['REDISTOGO_URL'].replaceAll('^redis://([^:]*):([^@]*)@([^:]*):([^/]*)(/)?','$4') }"/>
-      <property name="password" value="#{systemEnvironment['REDISTOGO_URL'].replaceAll('^redis://([^:]*):([^@]*)@([^:]*):([^/]*)(/)?','$2') }"/>
+    :::xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <beans xmlns="http://www.springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+    <context:annotation-config/>
+    <context:property-placeholder/>
+
+    <bean id="jedisURI" class="java.net.URI">
+        <constructor-arg value="${REDISTOGO_URL}"/>
     </bean>
+    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig"/>
+    <bean id="jedisPool" class="redis.clients.jedis.JedisPool">
+        <constructor-arg index="0" ref="jedisPoolConfig"/>
+        <constructor-arg index="1" value="#{ @jedisURI.getHost() }"/>
+        <constructor-arg index="2" value="#{ @jedisURI.getPort() }"/>
+        <constructor-arg index="3" value="#{ T(redis.clients.jedis.Protocol).DEFAULT_TIMEOUT }"/>
+        <constructor-arg index="4" value="#{ @jedisURI.getUserInfo().split(':',2)[1] }"/>
+    </bean>
+    </beans>
 
-Pool Creation:
+### Sample Code
+
+To see a complete, working example, check out the [sample code in github](https://github.com/heroku/devcenter-redis-java).
+
+Clone the repo with:
+
+    $ git clone https://github.com/heroku/devcenter-redis-java.git
+
+Start up Redis locally and set the `REDISTOGO_URL` environment variable:
+
+    $ export REDISTOGO_URL="redis://:@localhost:6379"
+
+Build the sample:
+
+    $ mvn package
+    [INFO] Scanning for projects...
+    [INFO]                                                                         
+    [INFO] ------------------------------------------------------------------------
+    [INFO] Building redisSample 0.0.1-SNAPSHOT
+    [INFO] ------------------------------------------------------------------------
+    ...
+
+Run it with foreman:
+
+    $ foreman start
+    22:21:21 web.1     | started with pid 46300
+    22:21:21 web.1     | Nov 20, 2011 10:21:21 PM org.springframework.context.support.AbstractApplicationContext prepareRefresh
+    22:21:21 web.1     | INFO: Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@182d9c06: startup date [Sun Nov 20 22:21:21 PST 2011]; root of context hierarchy
+    22:21:21 web.1     | Nov 20, 2011 10:21:21 PM org.springframework.beans.factory.support.DefaultListableBeanFactory preInstantiateSingletons
+    22:21:21 web.1     | INFO: Pre-instantiating singletons in org.springframework.beans.factory.support.DefaultListableBeanFactory@4b0ab323: defining beans [org.springframework.context.annotation.internalConfigurationAnnotationProcessor,org.springframework.context.annotation.internalAutowiredAnnotationProcessor,org.springframework.context.annotation.internalRequiredAnnotationProcessor,org.springframework.context.annotation.internalCommonAnnotationProcessor,springConfig,getJedisPool]; root of factory hierarchy
+    22:21:21 web.1     | Setting up new RedisPool for connection redis://:@localhost:6379
+    22:21:21 web.1     | 2011-11-20 22:21:21.707:INFO:oejs.Server:jetty-7.5.4.v20111024
+    22:21:21 web.1     | 2011-11-20 22:21:21.810:INFO:oejsh.ContextHandler:started o.e.j.s.ServletContextHandler{/,null}
+    22:21:21 web.1     | 2011-11-20 22:21:21.838:INFO:oejs.AbstractConnector:Started SelectChannelConnector@0.0.0.0:5000 STARTING
+
+Test it with curl. Set a new value:
+
+    :::term
+    $ curl http://localhost:5000/mykey -d "value=myvalue"
+    /mykey = myvalue
+
+and get the value
+
+    :::term
+    $ curl http://localhost:5000/mykey
+    /mykey = myvalue
+
+
+You can switch between the Java and XML based configuration by commenting out one of the two lines in `Main.java` in the `spring` sub-package:
 
     :::java
-    //Use GenericXmlApplicationContext for xml based config
-    ApplicationContext ctx = new AnnotationConfigApplicationContext(SpringConfig.class);
-    RedisConfig config = ctx.getBean(RedisConfig.class);
-    JedisPool pool = new JedisPool(new Config(), config.getHost(), config.getPort(), Protocol.DEFAULT_TIMEOUT, config.getPassword());
-    Jedis jedis = pool.getResource();
+    public class Main {
 
-You can also download the [sample code](http://github.com/heroku/devcenter-redis-java)
+        public static void main(String[] args) throws Exception{
+
+            // If you want Java based configuration:
+    		final ApplicationContext ctx = new AnnotationConfigApplicationContext(SpringConfig.class);
+    	
+    		// If you want XML based configuration:
+    		//final ApplicationContext ctx = new GenericXmlApplicationContext("applicationContext.xml");
+        
+            ...
+

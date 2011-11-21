@@ -8,11 +8,17 @@
       http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
   <context:annotation-config/>
+  <context:property-placeholder/>
 
-  <bean class="com.heroku.devcenter.spring.RedisConfig">
-      <property name="host" value="#{systemEnvironment['REDISTOGO_URL'].replaceAll('^redis://([^:]*):([^@]*)@([^:]*):([^/]*)(/)?','$3') }"/>
-      <property name="port" value="#{systemEnvironment['REDISTOGO_URL'].replaceAll('^redis://([^:]*):([^@]*)@([^:]*):([^/]*)(/)?','$4') }"/>
-      <property name="password" value="#{systemEnvironment['REDISTOGO_URL'].replaceAll('^redis://([^:]*):([^@]*)@([^:]*):([^/]*)(/)?','$2') }"/>
+  <bean id="jedisURI" class="java.net.URI">
+    <constructor-arg value="${REDISTOGO_URL}"/>
   </bean>
-
+  <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig"/>
+  <bean id="jedisPool" class="redis.clients.jedis.JedisPool">
+    <constructor-arg index="0" ref="jedisPoolConfig"/>
+    <constructor-arg index="1" value="#{ @jedisURI.getHost() }"/>
+    <constructor-arg index="2" value="#{ @jedisURI.getPort() }"/>
+    <constructor-arg index="3" value="#{ T(redis.clients.jedis.Protocol).DEFAULT_TIMEOUT }"/>
+    <constructor-arg index="4" value="#{ @jedisURI.getUserInfo().split(':',2)[1] }"/>
+  </bean>
 </beans>
