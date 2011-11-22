@@ -17,10 +17,10 @@ public class Main {
 		try {
 			String testValue = "testValueSpring";
 
-			jedis.set("testKey", testValue);
+			jedis.set("testKeySpring", testValue);
 			System.out.println("Value set into Redis is: " + testValue);
 
-			System.out.println("Value retrieved from Redis is: " + jedis.get("testKey"));
+			System.out.println("Value retrieved from Redis is: " + jedis.get("testKeySpring"));
 		} finally {
 			pool.returnResource(jedis);
 		}
