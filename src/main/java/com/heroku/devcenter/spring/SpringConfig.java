@@ -17,7 +17,6 @@ public class SpringConfig {
     public JedisPool getJedisPool() {
             try {
                     URI redisURI = new URI(System.getenv("REDISTOGO_URL"));
-                    System.out.println("Setting up new RedisPool for connection "+redisURI);
                     return new JedisPool(new JedisPoolConfig(),
                                     redisURI.getHost(),
                                     redisURI.getPort(),
