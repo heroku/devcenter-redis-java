@@ -58,7 +58,7 @@ You can switch between the Java and XML based configuration by commenting out on
 
 # Test on Heroku
 
-Assuming you already have a Heroku account and have installed the Heroku toolbelt, you can test this sample on Heroku in a few steps
+Assuming you already have a [Heroku account](http://heroku.com/signup) and have installed the [Heroku command line tool](http://devcenter.heroku.com/articles/java), you can test this sample on Heroku in a few steps.
 
 ## Create Heroku App
 
