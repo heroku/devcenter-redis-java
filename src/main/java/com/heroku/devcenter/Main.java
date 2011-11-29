@@ -18,7 +18,6 @@ public class Main {
 		JedisPool pool;
 		try {
 			URI redisURI = new URI(System.getenv("REDISTOGO_URL"));
-			System.out.println("Setting up new RedisPool for connection "+redisURI);
 			pool = new JedisPool(new JedisPoolConfig(),
 					redisURI.getHost(), 
 					redisURI.getPort(),
