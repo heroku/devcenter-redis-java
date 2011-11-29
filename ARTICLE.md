@@ -12,7 +12,7 @@ Include the Jedis library in your application by adding the following dependency
         <version>2.0.0</version>
     </dependency>
 
-### Use Redis in Your Application
+### Use Redis in your application
 
 The connection information for the Redis Service provisioned by Redis To Go is stored as a URL in the `REDISTOGO_URL` config var. You can create a Jedis connection pool from this URL string with the following code snippet:
 
@@ -47,7 +47,7 @@ Now you can use this pool to perform Redis operations. For example:
 
 ### Using Redis with Spring
 
-Using the following Java Configuration class to set up a `JedisPool` instance as a singleton Spring bean:
+Use the following Java Configuration class to set up a `JedisPool` instance as a singleton Spring bean:
 
     :::java
     @Configuration
@@ -98,6 +98,6 @@ or the following XML configuration file:
     </bean>
     </beans>
 
-### Sample Code
+### Sample code
 
 To see a complete, working example, check out the [sample code in github](https://github.com/heroku/devcenter-redis-java). The [readme](https://github.com/heroku/devcenter-redis-java/blob/master/README.md) explains more about the example.

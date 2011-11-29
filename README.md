@@ -1,6 +1,6 @@
 ## Using Redis from Java
 
-This is an example of using Jedis to connecto to the Redis To Go service from both a generic Java application and a Spring configured application on Heroku. Read more about how to use Redis To Go in the [add-on article](http://devcenter.heroku.com/articles/redistogo).
+This is an example of using Jedis to connect to the Redis To Go service from both a generic Java application and a Spring configured application on Heroku. Read more about how to use Redis To Go in the [add-on article](http://devcenter.heroku.com/articles/redistogo).
 
 # Using The Sample Code
 
