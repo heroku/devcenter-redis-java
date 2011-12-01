@@ -15,6 +15,7 @@ import redis.clients.jedis.Protocol;
 public class Main {
 
 	public static void main(String[] args) {
+		System.out.println("Launching Redis sample.");
 		JedisPool pool;
 		try {
 			URI redisURI = new URI(System.getenv("REDISTOGO_URL"));
@@ -24,8 +25,7 @@ public class Main {
 					Protocol.DEFAULT_TIMEOUT, 
 					redisURI.getUserInfo().split(":",2)[1]);
 		} catch (URISyntaxException e) {
-			throw new RuntimeException("Redis couldn't be configured from URL in REDISTOGO_URL env var: "+
-										System.getenv("REDISTOGO_URL"));
+			throw new RuntimeException("Redis couldn't be configured from URL in REDISTOGO_URL env var ");
 		}
 		Jedis jedis = pool.getResource();
 		try {
