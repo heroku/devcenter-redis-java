@@ -22,24 +22,19 @@ Build the sample:
     [INFO] ------------------------------------------------------------------------
     ...
 
-Run it with foreman:
+Now that it's built, you can run the plain Java example, or the Spring example:
 
-    $ foreman start
-    22:31:48 sample.1        | started with pid 74251
-    22:31:48 springsample.1  | started with pid 74252
-    22:31:48 sample.1        | Setting up new RedisPool for connection redis://redistogo:9451749016f2bd2780a19abe20d343b8@viperfish.redistogo.com:9411/
-    22:31:48 springsample.1  | Nov 21, 2011 10:31:48 PM org.springframework.context.support.AbstractApplicationContext prepareRefresh
-    22:31:48 springsample.1  | INFO: Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@95c083: startup date [Mon Nov 21 22:31:48 PST 2011]; root of context hierarchy
-    22:31:48 springsample.1  | Nov 21, 2011 10:31:48 PM org.springframework.beans.factory.support.DefaultListableBeanFactory preInstantiateSingletons
-    22:31:48 springsample.1  | INFO: Pre-instantiating singletons in org.springframework.beans.factory.support.DefaultListableBeanFactory@d8d9850: defining beans [org.springframework.context.annotation.internalConfigurationAnnotationProcessor,org.springframework.context.annotation.internalAutowiredAnnotationProcessor,org.springframework.context.annotation.internalRequiredAnnotationProcessor,org.springframework.context.annotation.internalCommonAnnotationProcessor,springConfig,getJedisPool]; root of factory hierarchy
-    22:31:48 springsample.1  | Setting up new RedisPool for connection redis://redistogo:9451749016f2bd2780a19abe20d343b8@viperfish.redistogo.com:9411/
-    22:31:49 springsample.1  | Value set into Redis is: testValueSpring
-    22:31:49 sample.1        | Value set into Redis is: testValue
-    22:31:49 springsample.1  | Value retrieved from Redis is: testValueSpring
-    22:31:49 sample.1        | Value retrieved from Redis is: testValue
-    22:31:49 springsample.1  | process terminated
-    22:31:49 system          | sending SIGTERM to all processes
+* To run the plain Java example:
 
+    $ sh target/bin/sample
+
+* To run the Spring example:
+
+    $ sh target/bin/spring-sample
+
+<div class="callout" markdown="1">
+Note: you can also use foreman to execute the Procfile. [Read more about foreman and procfiles](http://devcenter.heroku.com/articles/procfile).
+</div>
 
 You can switch between the Java and XML based configuration by commenting out one of the two lines in `Main.java` in the `spring` sub-package:
 
@@ -49,7 +44,7 @@ You can switch between the Java and XML based configuration by commenting out on
         public static void main(String[] args) throws Exception{
 
             // If you want Java based configuration:
-    		final ApplicationContext ctx = new AnnotationConfigApplicationContext(SpringConfig.class);
+        	final ApplicationContext ctx = new AnnotationConfigApplicationContext(SpringConfig.class);
     	
     		// If you want XML based configuration:
     		//final ApplicationContext ctx = new GenericXmlApplicationContext("applicationContext.xml");
@@ -125,4 +120,3 @@ and
     INFO: Pre-instantiating singletons in org.springframework.beans.factory.support.DefaultListableBeanFactory@1d10c424: defining beans [org.springframework.context.annotation.internalConfigurationAnnotationProcessor,org.springframework.context.annotation.internalAutowiredAnnotationProcessor,org.springframework.context.annotation.internalRequiredAnnotationProcessor,org.springframework.context.annotation.internalCommonAnnotationProcessor,springConfig,getJedisPool]; root of factory hierarchy
     Value set into Redis is: testValueSpring
     Value retrieved from Redis is: testValueSpring
-
